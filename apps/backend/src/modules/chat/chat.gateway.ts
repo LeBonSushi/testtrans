@@ -49,7 +49,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       if (!this.userSockets.has(userId)) {
         this.userSockets.set(userId, new Set());
       }
-      this.userSockets.get(userId).add(client.id);
+      this.userSockets.get(userId)!.add(client.id);
 
       console.log(`✅ Client connected: ${client.id} (User: ${userId})`);
     } catch (error) {
@@ -61,8 +61,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   handleDisconnect(client: Socket) {
     const userId = client.data.userId;
     if (userId && this.userSockets.has(userId)) {
-      this.userSockets.get(userId).delete(client.id);
-      if (this.userSockets.get(userId).size === 0) {
+      this.userSockets.get(userId)!.delete(client.id);
+      if (this.userSockets.get(userId)!.size === 0) {
         this.userSockets.delete(userId);
       }
     }

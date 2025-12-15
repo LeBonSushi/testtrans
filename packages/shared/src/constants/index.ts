@@ -113,4 +113,13 @@ export const API_ROUTES = {
     CREATE: (roomId: string) => `/rooms/${roomId}/messages`,
     DELETE: (roomId: string, id: string) => `/rooms/${roomId}/messages/${id}`,
   },
+
+  // Storage
+  STORAGE: {
+    UPLOAD: {
+      PROFILE_PICTURE: '/storage/upload/profile-picture',
+      ROOM_IMAGE: '/storage/upload/room-image',
+      MESSAGE_ATTACHMENT: '/storage/upload/message-attachment',
+    },
+  },
 } as const;

@@ -9,6 +9,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 import { StorageModule } from './modules/storage/storage.module';
 import { PrismaModule } from './common/prisma/prisma.module';
 import { RedisModule } from './common/redis/redis.module';
+import { GatewayModule } from './common/gateway/gateway.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { RedisModule } from './common/redis/redis.module';
     // Core modules
     PrismaModule,
     RedisModule,
+    GatewayModule,
 
     // Feature modules
     AuthModule,

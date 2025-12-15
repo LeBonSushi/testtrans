@@ -10,16 +10,16 @@ export class StorageService {
 
   constructor(private config: ConfigService) {
     this.s3Client = new S3Client({
-      endpoint: this.config.get('S3_ENDPOINT'),
-      region: this.config.get('S3_REGION') || 'us-east-1',
+      endpoint: this.config.get<string>('S3_ENDPOINT', 'http://localhost:9000'),
+      region: this.config.get<string>('S3_REGION', 'us-east-1'),
       credentials: {
-        accessKeyId: this.config.get('S3_ACCESS_KEY'),
-        secretAccessKey: this.config.get('S3_SECRET_KEY'),
+        accessKeyId: this.config.get<string>('S3_ACCESS_KEY', 'minioadmin'),
+        secretAccessKey: this.config.get<string>('S3_SECRET_KEY', 'minioadmin'),
       },
       forcePathStyle: true, // Required for MinIO
     });
 
-    this.bucket = this.config.get('S3_BUCKET');
+    this.bucket = this.config.get<string>('S3_BUCKET', 'default-bucket');
   }
 
   async uploadFile(file: Express.Multer.File, folder: string): Promise<string> {

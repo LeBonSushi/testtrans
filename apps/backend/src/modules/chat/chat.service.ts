@@ -24,7 +24,7 @@ export class ChatService {
     });
   }
 
-  async createMessage(roomId: string, senderId: string, content: string, type = 'TEXT') {
+  async createMessage(roomId: string, senderId: string, content: string, type: 'TEXT' | 'IMAGE' | 'SYSTEM' = 'TEXT') {
     const message = await this.prisma.message.create({
       data: {
         roomId,
