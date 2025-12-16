@@ -1,5 +1,7 @@
 import { WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
+import { UseGuards } from '@nestjs/common';
 import { Server } from 'socket.io';
+import { WsJwtGuard } from '../auth/guards/ws-jwt.guard';
 
 @WebSocketGateway({
   cors: {
@@ -7,11 +9,8 @@ import { Server } from 'socket.io';
     credentials: true,
   },
 })
+@UseGuards(WsJwtGuard)
 export class NotificationsGateway {
   @WebSocketServer()
   server: Server;
-
-  sendToUser(userId: string, event: string, data: any) {
-    this.server.to(`user:${userId}`).emit(event, data);
-  }
 }

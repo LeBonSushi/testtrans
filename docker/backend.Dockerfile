@@ -30,14 +30,24 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
-# Copy only production dependencies
-COPY --from=builder /app/apps/backend/dist ./apps/backend/dist
-COPY --from=builder /app/apps/backend/package.json ./apps/backend/
-COPY --from=builder /app/packages ./packages
-COPY --from=builder /app/node_modules ./node_modules
+# Copy package files and install production dependencies
 COPY --from=builder /app/package.json ./
 COPY --from=builder /app/pnpm-workspace.yaml ./
+COPY --from=builder /app/pnpm-lock.yaml ./
+COPY --from=builder /app/packages/shared/package.json ./packages/shared/
+COPY --from=builder /app/packages/database/package.json ./packages/database/
+COPY --from=builder /app/apps/backend/package.json ./apps/backend/
+
+# Install production dependencies with proper symlinks
+RUN pnpm install --frozen-lockfile --prod
+
+# Copy built code and generated prisma client
+COPY --from=builder /app/apps/backend/dist ./apps/backend/dist
+COPY --from=builder /app/packages ./packages
+
+# Re-generate Prisma Client in production
+RUN cd packages/database && pnpm prisma generate
 
 EXPOSE 4000
 
-CMD ["node", "apps/backend/dist/main.js"]
+CMD ["node", "apps/backend/dist/apps/backend/src/main.js"]

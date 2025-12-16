@@ -1,29 +1,23 @@
 export const SOCKET_EVENTS = {
-  // Connection
   CONNECTION: 'connection',
   DISCONNECT: 'disconnect',
 
-  // Chat
   MESSAGE_SEND: 'message:send',
   MESSAGE_RECEIVE: 'message:receive',
   TYPING_START: 'typing:start',
   TYPING_STOP: 'typing:stop',
 
-  // Room
   ROOM_JOIN: 'room:join',
   ROOM_LEAVE: 'room:leave',
   ROOM_UPDATE: 'room:update',
 
-  // Presence
   USER_ONLINE: 'user:online',
   USER_OFFLINE: 'user:offline',
 
-  // Notifications
   NOTIFICATION: 'notification',
 } as const;
 
 export const API_ROUTES = {
-  // Auth
   AUTH: {
     REGISTER: '/auth/register',
     LOGIN: '/auth/login',
@@ -34,7 +28,6 @@ export const API_ROUTES = {
     FORTY_TWO: '/auth/42',
   },
 
-  // Users
   USERS: {
     GET: (id: string) => `/users/${id}`,
     UPDATE: (id: string) => `/users/${id}`,
@@ -42,7 +35,6 @@ export const API_ROUTES = {
     FRIENDS: (id: string) => `/users/${id}/friends`,
   },
 
-  // Friends
   FRIENDS: {
     REQUESTS: '/friends/requests',
     SEND: (userId: string) => `/friends/request/${userId}`,
@@ -53,7 +45,6 @@ export const API_ROUTES = {
     UNBLOCK: (friendshipId: string) => `/friends/unblock/${friendshipId}`,
   },
 
-  // Rooms
   ROOMS: {
     CREATE: '/rooms',
     GET: (id: string) => `/rooms/${id}`,
@@ -66,7 +57,6 @@ export const API_ROUTES = {
     KICK: (roomId: string, userId: string) => `/rooms/${roomId}/members/${userId}`,
   },
 
-  // Availability
   AVAILABILITY: {
     LIST: (roomId: string) => `/rooms/${roomId}/availability`,
     CREATE: (roomId: string) => `/rooms/${roomId}/availability`,
@@ -74,7 +64,6 @@ export const API_ROUTES = {
     DELETE: (roomId: string, id: string) => `/rooms/${roomId}/availability/${id}`,
   },
 
-  // Proposals
   PROPOSALS: {
     LIST: (roomId: string) => `/rooms/${roomId}/proposals`,
     CREATE: (roomId: string) => `/rooms/${roomId}/proposals`,
@@ -83,7 +72,6 @@ export const API_ROUTES = {
     SELECT: (roomId: string, id: string) => `/rooms/${roomId}/proposals/${id}/select`,
   },
 
-  // Votes
   VOTES: {
     LIST: (roomId: string, proposalId: string) =>
       `/rooms/${roomId}/proposals/${proposalId}/votes`,
@@ -95,7 +83,6 @@ export const API_ROUTES = {
       `/rooms/${roomId}/proposals/${proposalId}/vote`,
   },
 
-  // Activities
   ACTIVITIES: {
     LIST: (roomId: string, proposalId: string) =>
       `/rooms/${roomId}/proposals/${proposalId}/activities`,
@@ -107,14 +94,12 @@ export const API_ROUTES = {
       `/rooms/${roomId}/proposals/${proposalId}/activities/${id}`,
   },
 
-  // Messages
   MESSAGES: {
     LIST: (roomId: string) => `/rooms/${roomId}/messages`,
     CREATE: (roomId: string) => `/rooms/${roomId}/messages`,
     DELETE: (roomId: string, id: string) => `/rooms/${roomId}/messages/${id}`,
   },
 
-  // Storage
   STORAGE: {
     UPLOAD: {
       PROFILE_PICTURE: '/storage/upload/profile-picture',

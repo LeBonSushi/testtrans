@@ -29,6 +29,14 @@ async function bootstrap() {
   // Middleware
   app.use(cookieParser());
 
+  // Debug middleware
+  app.use((req: any, _res: any, next: any) => {
+    console.log(`${req.method} ${req.url}`);
+    console.log('Cookies:', req.cookies);
+    console.log('Headers:', req.headers.cookie);
+    next();
+  });
+
   // API prefix
   app.setGlobalPrefix('api');
 

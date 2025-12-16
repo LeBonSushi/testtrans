@@ -1,6 +1,9 @@
 import axios, { AxiosInstance } from 'axios';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+// Use proxy in browser, direct URL on server-side
+const API_URL = typeof window !== 'undefined'
+  ? '/api'  // Client-side: use Next.js proxy
+  : process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'; // Server-side
 
 class ApiClient {
   private client: AxiosInstance;

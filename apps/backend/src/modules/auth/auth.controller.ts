@@ -4,17 +4,16 @@ import {
   Get,
   Body,
   UseGuards,
-  Req,
   Res,
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
 import { Response } from 'express';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
 import { GetUser } from '@/common/decorators/get-user.decorator';
 import { Public } from '@/common/gateway';
 
@@ -25,14 +24,20 @@ export class AuthController {
   @Public()
   @Post('register')
   async register(@Body() dto: RegisterDto, @Res({ passthrough: true }) res: Response) {
-    const result = await this.authService.register(dto);
+    const { refreshToken, ...result } = await this.authService.register(dto);
 
-    // Set HTTP-only cookie
     res.cookie('access_token', result.accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'none',
+      maxAge: 15 * 60 * 1000,
+    });
+
+    res.cookie('refresh_token', refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'none',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
     return result;
@@ -42,25 +47,25 @@ export class AuthController {
   @Post('login')
   @HttpCode(HttpStatus.OK)
   async login(@Body() dto: LoginDto, @Res({ passthrough: true }) res: Response) {
-    const result = await this.authService.login(dto);
+    const { refreshToken, ...result } = await this.authService.login(dto);
 
-    // Set HTTP-only cookie
     res.cookie('access_token', result.accessToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: false,
+      sameSite: 'lax',
+      maxAge: 15 * 60 * 1000, // 15 minutes
+      path: '/',
+    });
+
+    res.cookie('refresh_token', refreshToken, {
+      httpOnly: true,
+      secure: false,
       sameSite: 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      path: '/',
     });
 
     return result;
-  }
-
-  @Post('logout')
-  @UseGuards(JwtAuthGuard)
-  @HttpCode(HttpStatus.OK)
-  async logout(@Res({ passthrough: true }) res: Response) {
-    res.clearCookie('access_token');
-    return { message: 'Logged out successfully' };
   }
 
   @Get('me')
@@ -69,76 +74,41 @@ export class AuthController {
     return this.authService.validateUser(userId);
   }
 
-  // Google OAuth
   @Public()
-  @Get('google')
-  @UseGuards(AuthGuard('google'))
-  async googleAuth() {
-    // Guard redirects to Google
-  }
-
-  @Public()
-  @Get('google/callback')
-  @UseGuards(AuthGuard('google'))
-  async googleCallback(@Req() req: any, @Res() res: Response) {
-    const tokens = await this.authService.generateTokens(req.user.id, req.user.email);
+  @Post('refresh')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtRefreshGuard)
+  async refresh(@GetUser('id') userId: string, @GetUser('email') email: string, @Res({ passthrough: true }) res: Response) {
+    const tokens = await this.authService.generateTokens(userId, email);
 
     res.cookie('access_token', tokens.accessToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: false,
       sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+      maxAge: 15 * 60 * 1000, // 15 minutes
+      path: '/',
     });
 
-    // Redirect to frontend
-    res.redirect(process.env.CORS_ORIGIN || 'http://localhost:3000');
-  }
-
-  // GitHub OAuth
-  @Public()
-  @Get('github')
-  @UseGuards(AuthGuard('github'))
-  async githubAuth() {
-    // Guard redirects to GitHub
-  }
-
-  @Public()
-  @Get('github/callback')
-  @UseGuards(AuthGuard('github'))
-  async githubCallback(@Req() req: any, @Res() res: Response) {
-    const tokens = await this.authService.generateTokens(req.user.id, req.user.email);
-
-    res.cookie('access_token', tokens.accessToken, {
+    res.cookie('refresh_token', tokens.refreshToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: false,
       sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      path: '/',
     });
 
-    res.redirect(process.env.CORS_ORIGIN || 'http://localhost:3000');
-  }
-
-  // 42 OAuth
-  @Public()
-  @Get('42')
-  @UseGuards(AuthGuard('42'))
-  async fortyTwoAuth() {
-    // Guard redirects to 42
+    return {
+      accessToken: tokens.accessToken,
+      expiresIn: tokens.expiresIn,
+    };
   }
 
   @Public()
-  @Get('42/callback')
-  @UseGuards(AuthGuard('42'))
-  async fortyTwoCallback(@Req() req: any, @Res() res: Response) {
-    const tokens = await this.authService.generateTokens(req.user.id, req.user.email);
-
-    res.cookie('access_token', tokens.accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
-
-    res.redirect(process.env.CORS_ORIGIN || 'http://localhost:3000');
+  @Post('logout')
+  @HttpCode(HttpStatus.OK)
+  async logout(@Res({ passthrough: true }) res: Response) {
+    res.clearCookie('access_token');
+    res.clearCookie('refresh_token');
+    return { message: 'Logged out successfully' };
   }
 }

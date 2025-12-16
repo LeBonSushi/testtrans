@@ -15,7 +15,6 @@ export class AuthService {
   ) {}
 
   async register(dto: RegisterDto) {
-    // Check if user exists
     const existingUser = await this.prisma.user.findFirst({
       where: {
         OR: [{ email: dto.email }, { username: dto.username }],
@@ -29,10 +28,8 @@ export class AuthService {
       throw new ConflictException('Username already taken');
     }
 
-    // Hash password
     const passwordHash = await bcrypt.hash(dto.password, 10);
 
-    // Create user with profile
     const user = await this.prisma.user.create({
       data: {
         email: dto.email,
@@ -59,7 +56,6 @@ export class AuthService {
   }
 
   async login(dto: LoginDto) {
-    // Find user by email or username
     const user = await this.prisma.user.findFirst({
       where: {
         OR: [{ email: dto.usernameOrEmail }, { username: dto.usernameOrEmail }],
@@ -73,7 +69,6 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    // Verify password
     const passwordValid = await bcrypt.compare(dto.password, user.passwordHash);
     if (!passwordValid) {
       throw new UnauthorizedException('Invalid credentials');
@@ -157,11 +152,18 @@ export class AuthService {
   async generateTokens(userId: string, email: string) {
     const payload = { sub: userId, email };
 
-    const accessToken = await this.jwtService.signAsync(payload);
+	const accessToken = await this.jwtService.signAsync(payload, {
+		expiresIn: parseInt(this.config.get<string>('JWT_EXPIRES_IN_SECOND', '900'), 10),
+	});
+
+	const refreshToken = await this.jwtService.signAsync(payload, {
+		expiresIn: parseInt(this.config.get<string>('JWT_REFRESH_TIME_SECOND', '604800'), 10),
+	});
 
     return {
       accessToken,
-      expiresIn: this.config.get('JWT_EXPIRES_IN') || '7d',
+      refreshToken,
+      expiresIn: parseInt(this.config.get<string>('JWT_EXPIRES_IN_SECOND', '900'), 10),
     };
   }
 
